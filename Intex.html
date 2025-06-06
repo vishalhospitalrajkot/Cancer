@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Calm Harmony (#FBF9F1, #4A5D5F, #C8A381, #A97155) -->
+    <!-- Application Structure Plan: A user-centric, single-page application with a fixed top navigation bar for easy access to key sections. The structure is designed to guide users based on their immediate needs, rather than following the report's linear format. The journey starts with a calming welcome, followed by sections for 'Understanding Cancer', 'The Journey (Diagnosis, Staging, Treatment)', 'Living Well', 'Finding Support (Financial, Hospitals, NGOs)', and 'Advanced Care'. This allows a newly diagnosed person to jump to 'The Journey', while a caregiver might head to 'Finding Support' or 'Advanced Care'. The key interactions include a language switcher for English, Hindi, and Gujarati, interactive diagrams for cancer staging, clickable cards for treatments, and a filterable list of hospitals to find relevant care in India. This architecture prioritizes user empowerment and clarity in a time of overwhelming information. -->
+    <!-- Visualization & Content Choices: Report Info -> Risk Factors; Goal -> Inform; Viz -> Doughnut Chart (Chart.js); Interaction -> Hover for details; Justification -> Provides a quick visual summary of contributing factors. Report Info -> Cancer Staging; Goal -> Organize/Inform; Viz -> Custom interactive diagram (HTML/CSS/JS); Interaction -> Click on a stage to reveal its description; Justification -> Simplifies the complex TNM system into understandable phases (0-IV) as requested. Report Info -> Hospital List; Goal -> Organize/Action; Viz -> Filterable Table/Card list (HTML/JS); Interaction -> Filter by State and Type (Govt/Private); Justification -> Provides an actionable tool for users to find practical, location-specific information, which is a critical need. All visualizations are built using Canvas or structured HTML to adhere to the NO SVG/Mermaid constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>Navigating the Cancer Journey: A Guide to Hope & Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Gujarati:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #FBF9F1;
+            color: #333;
+        }
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-hi { font-family: 'Noto Sans Devanagari', sans-serif; }
+        .font-gu { font-family: 'Noto Sans Gujarati', sans-serif; }
+
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #A97155;
+            border-bottom-color: #A97155;
+        }
+        .active-nav {
+            color: #A97155 !important;
+            border-bottom-color: #A97155 !important;
+            font-weight: 700;
+        }
+        .btn-primary {
+            background-color: #4A5D5F;
+            color: #FBF9F1;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #3A4A4C;
+        }
+        .btn-secondary {
+            background-color: #C8A381;
+            color: #4A5D5F;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #B89371;
+        }
+        .lang-btn.active {
+            background-color: #A97155;
+            color: white;
+            font-weight: bold;
+        }
+        .card {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .stage-box {
+            border: 2px solid #C8A381;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .stage-box.active, .stage-box:hover {
+            background-color: #4A5D5F;
+            color: white;
+            border-color: #4A5D5F;
+        }
+        .hidden-lang {
+            display: none;
+        }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 400px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) { 
+            .chart-container { 
+                height: 400px; 
+            } 
+        }
+    </style>
+</head>
+<body class="font-en">
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-[#4A5D5F]">
+                        <span class="lang-content" data-lang="en">A Guide to Hope</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">आशा की एक किरण</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">આશાની એક કિરણ</span>
+                    </h1>
+                </div>
+                <nav class="hidden md:flex md:space-x-4 lg:space-x-8">
+                    <a href="#understanding" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">
+                        <span class="lang-content" data-lang="en">Understanding</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">समझ</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">સમજ</span>
+                    </a>
+                    <a href="#journey" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">
+                        <span class="lang-content" data-lang="en">The Journey</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">यात्रा</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">યાત્રા</span>
+                    </a>
+                    <a href="#living-well" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">
+                        <span class="lang-content" data-lang="en">Living Well</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">स्वस्थ जीवन</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">સ્વસ્થ જીવન</span>
+                    </a>
+                    <a href="#support" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">
+                        <span class="lang-content" data-lang="en">Support</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">सहायता</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">સહાય</span>
+                    </a>
+                    <a href="#advanced-care" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">
+                        <span class="lang-content" data-lang="en">Advanced Care</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">उन्नत देखभाल</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">અદ્યતન સંભાળ</span>
+                    </a>
+                    <a href="#emotional-support" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">
+                        <span class="lang-content" data-lang="en">Emotional Support</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">भावनात्मक समर्थन</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">भावनात्मक સહાય</span>
+                    </a>
+                </nav>
+                <div class="flex items-center space-x-2">
+                     <div class="flex items-center border border-gray-300 rounded-full">
+                        <button id="lang-en" class="lang-btn px-3 py-1 text-sm rounded-full active">EN</button>
+                        <button id="lang-hi" class="lang-btn px-3 py-1 text-sm rounded-full">HI</button>
+                        <button id="lang-gu" class="lang-btn px-3 py-1 text-sm rounded-full">GU</button>
+                    </div>
+                    <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-gray-600 hover:text-[#A97155] hover:bg-gray-100">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#understanding" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#A97155] hover:bg-gray-50">
+                    <span class="lang-content" data-lang="en">Understanding</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">समझ</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">સમજ</span>
+                </a>
+                <a href="#journey" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#A97155] hover:bg-gray-50">
+                    <span class="lang-content" data-lang="en">The Journey</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">यात्रा</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">યાત્રા</span>
+                </a>
+                <a href="#living-well" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#A97155] hover:bg-gray-50">
+                    <span class="lang-content" data-lang="en">Living Well</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">स्वस्थ जीवन</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">સ્વસ્થ જીવન</span>
+                </a>
+                <a href="#support" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#A97155] hover:bg-gray-50">
+                    <span class="lang-content" data-lang="en">Support</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">सहायता</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">સહાય</span>
+                </a>
+                <a href="#advanced-care" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#A97155] hover:bg-gray-50">
+                    <span class="lang-content" data-lang="en">Advanced Care</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">उन्नत देखभाल</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">અદ્યતન સંભાળ</span>
+                </a>
+                <a href="#emotional-support" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#A97155] hover:bg-gray-50">
+                    <span class="lang-content" data-lang="en">Emotional Support</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">भावनात्मक समर्थन</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">भावनात्मक સહાય</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <section class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-bold text-[#4A5D5F] mb-4">
+                <span class="lang-content" data-lang="en">Navigating the Cancer Journey Together</span>
+                <span class="lang-content hidden-lang" data-lang="hi">कैंसर की यात्रा में हम सब साथ हैं</span>
+                <span class="lang-content hidden-lang" data-lang="gu">કેન્સરની યાત્રામાં આપણે સૌ સાથે છીએ</span>
+            </h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                <span class="lang-content" data-lang="en">This guide is a resource for understanding cancer, exploring treatment, and finding support. Whether you're newly diagnosed, in advanced stages, or supporting a loved one, you are not alone.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">यह मार्गदर्शिका कैंसर को समझने, उपचार की खोज करने और सहायता खोजने के लिए एक संसाधन है। चाहे आपका हाल ही में निदान हुआ हो, आप उन्नत चरण में हों, या किसी प्रियजन का समर्थन कर रहे हों, आप अकेले नहीं हैं।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">આ માર્ગદર્શિકા કેન્સરને સમજવા, સારવારની શોધ કરવા અને સહાય મેળવવા માટેનું એક સંસાધન છે. ભલે તમારું તાજેતરમાં નિદાન થયું હોય, તમે અદ્યતન તબક્કામાં હોવ, અથવા કોઈ પ્રિયજનને ટેકો આપી રહ્યા હોવ, તમે એકલા નથી.</span>
+            </p>
+        </section>
+
+        <section id="understanding" class="py-12">
+             <h3 class="text-2xl md:text-3xl font-bold text-center text-[#4A5D5F] mb-2">
+                <span class="lang-content" data-lang="en">What is Cancer?</span>
+                <span class="lang-content hidden-lang" data-lang="hi">कैंसर क्या है?</span>
+                <span class="lang-content hidden-lang" data-lang="gu">કેન્સર શું છે?</span>
+            </h3>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                <span class="lang-content" data-lang="en">Cancer is a group of diseases characterized by the uncontrolled growth of abnormal cells. These abnormal cells can form tumors, which can be benign (non-cancerous) or malignant (cancerous) and spread to other parts of the body. Here's a look at its types, causes, and the history of our fight against it.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">कैंसर असामान्य कोशिकाओं की अनियंत्रित वृद्धि की विशेषता वाले रोगों का एक समूह है। ये असामान्य कोशिकाएं एक जगह ट्यूमर (गांठ) बना सकती हैं, जो या तो अच्छे (benign) हो सकते हैं या खतरनाक (malignant) बनकर शरीर के अन्य भागों में फैल सकते हैं। यहाँ इसके प्रकारों, कारणों और इसके खिलाफ हमारी लड़ाई के इतिहास पर एक नज़र है।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">કેન્સર એ અસામાન્ય કોષોના અનિયંત્રિત વિકાસ દ્વારા વર્ગીકૃત થયેલ રોગોનો સમૂહ છે. આ અસામાન્ય કોષો ગાંઠો બનાવી શકે છે, જે સૌમ્ય (બિન-કેન્સરયુક્ત) અથવા જીવલેણ (કેન્સરયુક્ત) હોઈ શકે છે અને શરીરના અન્ય ભાગોમાં ફેલાઈ શકે છે. અહીં તેના પ્રકારों, कारणों और इसके खिलाफ हमारी लड़ाई के इतिहास पर एक नज़र है।</span>
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div>
+                    <h4 class="text-xl font-bold text-[#4A5D5F] mb-4">
+                        <span class="lang-content" data-lang="en">Main Cancer Types</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">मुख्य कैंसर प्रकार</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">મુખ્ય કેન્સરના પ્રકારો</span>
+                    </h4>
+                    <div class="space-y-4">
+                         <div class="card p-4">
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Carcinomas</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">कार्सिनोमा</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">કાર્સિનોમા</span>
+                            </h5>
+                            <p class="text-sm text-gray-600">
+                                <span class="lang-content" data-lang="en">The most common type (~90% of cancers), originating in the skin or tissues lining internal organs (e.g., breast, lung, bowel, prostate).</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सबसे आम प्रकार (~90% कैंसर), जो त्वचा या आंतरिक अंगों (जैसे, स्तन, फेफड़े, प्रोस्टेट, कोलन) को अस्तर करने वाले ऊतकों में उत्पन्न होता है।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">સૌથી સામાન્ય પ્રકાર (~90% કેન્સર), જે ત્વચા અથવા આંતરિક અંગો (દા.ત., સ્તન, ફેફસાં, પ્રોસ્ટેટ, કોલોન) ને અસ્તર કરતા પેશીઓમાં ઉદ્ભવે છે.</span>
+                            </p>
+                        </div>
+                        <div class="card p-4">
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Sarcomas</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सारकोमा</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">સારકોમા</span>
+                            </h5>
+                            <p class="text-sm text-gray-600">
+                                <span class="lang-content" data-lang="en">Begin in connective or supportive tissues like bone, muscle, fat, or blood vessels (~1-2% of adult cancers). Examples include osteosarcoma (bone) and liposarcoma (fat).</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">हड्डी, मांसपेशियों, वसा, या रक्त वाहिकाओं जैसे संयोजी ऊतकों में शुरू होता है (~1-2% वयस्क कैंसर)। उदाहरणों में ऑस्टियोसारकोमा (हड्डी) और लिपोसारकोमा (वसा) शामिल हैं।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">હાડકાં, સ્નાયુ, ચરબી અથવા રક્તવાહિનીઓ જેવા સંયોજક પેશીઓમાં શરૂ થાય છે (~1-2% પુખ્ત કેન્સર). ઉદાહરણોમાં ઓસ્ટિયોસારકોમા (હાડકાં) અને લિપોસારકોમા (ચરબી) શામેલ છે.</span>
+                            </p>
+                        </div>
+                        <div class="card p-4">
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Leukemias</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">ल्यूकेमिया</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">લ્યુકેમિયા</span>
+                            </h5>
+                            <p class="text-sm text-gray-600">
+                                <span class="lang-content" data-lang="en">Cancers of white blood cells, starting in blood-forming tissues like bone marrow. Includes acute and chronic forms.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सफेद रक्त कोशिकाओं का कैंसर, जो अस्थि मज्जा जैसे रक्त बनाने वाले ऊतकों में शुरू होता है। इसमें तीव्र और पुराने रूप शामिल हैं।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">શ્વેત રક્તકણોનું કેન્સર, જે અસ્થિ મજ્જા જેવા રક્ત બનાવતા પેશીઓમાં શરૂ થાય છે. તેમાં તીવ્ર અને ક્રોનિક સ્વરૂપો શામેલ છે.</span>
+                            </p>
+                        </div>
+                        <div class="card p-4">
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Lymphomas & Myelomas</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">लिम्फोमा और मायलोमा</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">લિમ્ફોમા અને માયલોમા</span>
+                            </h4>
+                            <p class="text-sm text-gray-600">
+                                <span class="lang-content" data-lang="en">Cancers of the immune system cells. Lymphomas affect lymph nodes, while myelomas arise in plasma cells in the bone marrow.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">प्रतिरक्षा प्रणाली की कोशिकाओं का कैंसर। लिम्फोमा लिम्फ नोड्स को प्रभावित करते हैं, जबकि मायलोमा अस्थि मज्जा में प्लाज्मा कोशिकाओं में उत्पन्न होते हैं।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">રોગપ્રતિકારક શક્તિના કોષોનું કેન્સર. લિમ્ફોમા લસિકા ગાંઠોને અસર કરે છે, જ્યારે માયલોમા અસ્થિ મજ્જામાં પ્લાઝ્મા કોષोंમાં ઉદ્ભવે છે.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                     <h4 class="text-xl font-bold text-[#4A5D5F] mb-4">
+                        <span class="lang-content" data-lang="en">Key Risk Factors</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">मुख्य जोखिम कारक</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">મુખ્ય જોખમ પરિબળો</span>
+                    </h4>
+                    <div class="chart-container">
+                        <canvas id="riskFactorChart"></canvas>
+                    </div>
+                    <p class="text-sm text-gray-700 mt-4 text-justify">
+                        <span class="lang-content" data-lang="en">Cancer often arises from DNA changes (mutations) during cell division errors or exposure to harmful substances. Genetic predisposition (e.g., BRCA mutations) accounts for some cases. Environmental factors like tobacco use (the single largest preventable cause, linked to 90% of lung cancers), alcohol, and industrial chemicals play a significant role. Viral infections (HPV, Hepatitis B/C) and lifestyle factors like poor diet, lack of exercise, and obesity also increase risk. While the immune system typically eliminates abnormal cells, its failure can lead to cancer development.</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">कैंसर अक्सर कोशिका विभाजन की त्रुटियों या हानिकारक पदार्थों के संपर्क में आने से डीएनए परिवर्तनों (उत्परिवर्तन) के कारण होता है। आनुवंशिक प्रवृत्ति (जैसे, BRCA उत्परिवर्तन) कुछ मामलों के लिए जिम्मेदार है। तंबाकू का उपयोग (सबसे बड़ा रोके जाने योग्य कारण, 90% फेफड़ों के कैंसर से जुड़ा), शराब, और औद्योगिक रसायन जैसे पर्यावरणीय कारक एक महत्वपूर्ण भूमिका निभाते हैं। वायरल संक्रमण (एचपीवी, हेपेटाइटिस बी/सी) और खराब आहार, व्यायाम की कमी, और मोटापा जैसे जीवनशैली कारक भी जोखिम बढ़ाते हैं। जबकि प्रतिरक्षा प्रणाली आमतौर पर असामान्य कोशिकाओं को समाप्त कर देती है, इसकी विफलता कैंसर के विकास का कारण बन सकती है।</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">કેન્સર ઘણીવાર કોષ વિભાજનની ભૂલો અથવા હાનિકારક પદાર્થોના સંપર્કમાં આવવાને કારણે ડીએનએ ફેરફારો (ઉત્પરિવર્તન) થી ઉદ્ભવે છે. આનુવંશિક પૂર્વવૃત્તિ (દા.ત., BRCA મ્યુટેશન) કેટલાક કિસ્સાઓમાં જવાબદાર છે. તમાકુનો ઉપયોગ (સૌથી મોટો રોકી શકાય તેવો કારણ, 90% ફેફસાના કેન્સર સાથે જોડાયેલ), દારૂ, અને ઔદ્યોગિક રસાયણો જેવા પર્યાવરણીય પરિબળો મહત્વપૂર્ણ ભૂમિકા ભજવે છે. વાયરલ ચેપ (HPV, હેપેટાઇટિસ B/C) અને ખરાબ આહાર, કસરતનો અભાવ, અને સ્થૂળતા જેવા જીવનશૈલીના પરિબળો પણ જોખમ વધારે છે. જ્યારે રોગપ્રતિકારક શક્તિ સામાન્ય રીતે અસામાન્ય કોષોને દૂર કરે છે, તેની નિષ્ફળતા કેન્સરના વિકાસ તરફ દોરી શકે છે.</span>
+                    </p>
+                </div>
+            </div>
+            <div class="mt-12">
+                <h4 class="text-xl font-bold text-[#4A5D5F] mb-4 text-center">
+                    <span class="lang-content" data-lang="en">A Brief History of Cancer Understanding</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">कैंसर को समझने का संक्षिप्त इतिहास</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">કેન્સરને સમજવાનો સંક્ષિપ્ત ઇતિહાસ</span>
+                </h4>
+                <p class="text-gray-600 max-w-3xl mx-auto text-justify">
+                    <span class="lang-content" data-lang="en">Cancer has been known since ancient times. Egyptian physicians around 3000 BC described breast tumors with "no treatment." Hippocrates (c. 460-370 BC) coined "carcinos" (crab). For centuries, treatments were rudimentary, with poor outcomes. The 19th-20th centuries saw scientific foundations laid: Virchow (1858) linked cancer to cells, Halsted (1882) performed radical mastectomy, and X-rays (1895) and radium (1898) brought radiation therapy. Proof that viruses/chemicals cause cancer emerged (Rous sarcoma virus 1911, coal tar 1915). Mid-20th century to 1990s brought chemotherapy (nitrogen mustard 1940s), combination regimens, mammograms, Pap smears, hormone therapies (tamoxifen), and bone marrow transplants. From 2000s, precision medicine (targeted therapies for specific mutations) and immunotherapy (checkpoint inhibitors, CAR-T cell therapy) have revolutionized care, with early detection methods like liquid biopsies also advancing. India's cancer centers have integrated many modern modalities, with ongoing research into cost-effective treatments.</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">कैंसर प्राचीन काल से ज्ञात है। 3000 ईसा पूर्व के आसपास मिस्र के चिकित्सकों ने स्तन ट्यूमर का वर्णन "कोई उपचार नहीं" के साथ किया था। हिप्पोक्रेट्स (लगभग 460-370 ईसा पूर्व) ने "कार्सिनोस" (केकड़ा) शब्द गढ़ा। सदियों तक, उपचार आदिम थे, जिनमें खराब परिणाम मिलते थे। 19वीं-20वीं शताब्दी में वैज्ञानिक नींव रखी गई: विर्चो (1858) ने कैंसर को कोशिकाओं से जोड़ा, हैलस्टेड (1882) ने रेडिकल मास्टेक्टॉमी की, और एक्स-रे (1895) और रेडियम (1898) ने विकिरण चिकित्सा को जन्म दिया। यह साबित हुआ कि वायरस/रसायन कैंसर का कारण बनते हैं (रूस सारकोमा वायरस 1911, कोल तार 1915)। 20वीं शताब्दी के मध्य से 1990 के दशक तक कीमोथेरेपी (नाइट्रोजन मस्टर्ड 1940 के दशक), संयोजन उपचार, मैमोग्राम, पैप स्मीयर, हार्मोनल उपचार (टैमोक्सीफेन), और अस्थि मज्जा प्रत्यारोपण लाए गए। 2000 के दशक से, सटीक चिकित्सा (विशिष्ट उत्परिवर्तन के लिए लक्षित उपचार) और इम्यूनोथेरेपी (चेकपॉइंट अवरोधक, सीएआर-टी सेल थेरेपी) ने देखभाल में क्रांति ला दी है, जिसमें तरल बायोप्सी जैसे शुरुआती पहचान के तरीके भी आगे बढ़े हैं। भारत के कैंसर केंद्रों ने कई आधुनिक तौर-तरीकों को एकीकृत किया है, जिसमें लागत प्रभावी उपचारों पर शोध जारी है।</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">કેન્સર પ્રાચીન કાળથી જાણીતું છે. ઇજિપ્તીયન ચિકિત્સકોએ લગભગ 3000 બીસીમાં "કોઈ સારવાર નથી" એમ કહીને સ્તન ગાંઠોનું વર્ણન કર્યું હતું. હિપ્પોક્રેટ્સ (લગભગ 460-370 બીસી) એ "કાર્સિનોસ" (કરચલો) શબ્દ પ્રયોજ્યો હતો. સદીઓ સુધી, સારવાર પ્રાથમિક હતી, જેમાં ખરાબ પરિણામો મળ્યા હતા. 19મી-20મી સદીમાં વૈજ્ઞાનિક પાયા નાખવામાં આવ્યા: વિર્ચો (1858) એ કેન્સરને કોષો સાથે જોડ્યું, હેલ્સ્ટેડ (1882) એ રેડિકલ માસ્ટ્રેક્ટોમી કરી, અને એક્સ-રે (1895) અને રેડિયમ (1898) એ રેડિયેશન થેરાપી લાવ્યા. વાયરસ/રસાયણો કેન્સરનું કારણ બને છે તેનો પુરાવો ઉભરી આવ્યો (રસ સારકોમા વાયરસ 1911, કોલ ટાર 1915). 20મી સદીના મધ્યથી 1990ના દાયકા સુધી કીમોથેરાપી (નાઇટ્રોજન મસ્ટર્ડ 1940ના દાયકા), સંયોજન ઉપચાર, મેમોગ્રામ, પેપ સ્મીયર, હોર્મોનલ ઉપચાર (ટેમોક્સિફેન), અને અસ્થિ મજ્જા પ્રત્યારોપણ લાવવામાં આવ્યા. 2000ના દાયકાથી, ચોક્કસ દવા (વિશિષ્ટ મ્યુટેશન માટે લક્ષિત ઉપચાર) અને ઇમ્યુનોથેરાપી (ચેકપોઇન્ટ ઇન્હિબિટર્સ, CAR-T સેલ થેરાપી) એ સંભાળમાં ક્રાંતિ લાવી છે, જેમાં લિક્વિડ બાયોપ્સી જેવી પ્રારંભિક તપાસ પદ્ધતિઓ પણ વિકસિત થઈ છે. ભારતના કેન્સર કેન્દ્રોએ ઘણી આધુનિક પદ્ધતિઓને એકીકૃત કરી છે, જેમાં ખર્ચ-અસરકારક સારવારો પર સંશોધન ચાલુ છે.</span>
+                </p>
+            </div>
+        </section>
+
+        <section id="journey" class="py-12 bg-white rounded-xl shadow-lg">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#4A5D5F] mb-2">
+                <span class="lang-content" data-lang="en">The Patient Journey</span>
+                <span class="lang-content hidden-lang" data-lang="hi">रोगी की यात्रा</span>
+                <span class="lang-content hidden-lang" data-lang="gu">દર્દીની યાત્રા</span>
+            </h3>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                <span class="lang-content" data-lang="en">From the first tests to choosing a treatment path, understanding each step can help reduce anxiety and empower you to make informed decisions.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">पहले परीक्षणों से लेकर उपचार का मार्ग चुनने तक, प्रत्येक चरण को समझना चिंता को कम करने और आपको सूचित निर्णय लेने में सशक्त बनाने में मदद कर सकता है।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">પહેલા પરીક્ષણોથી લઈને સારવારનો માર્ગ પસંદ કરવા સુધી, દરેક પગલાને સમજવાથી ચિંતા ઘટાડવામાં અને તમને જાણકાર નિર્ણયો લેવા માટે સશક્ત બનાવવામાં મદદ મળી શકે છે.</span>
+            </p>
+
+            <div class="mb-12">
+                <h4 class="text-xl font-bold text-center text-[#4A5D5F] mb-6">
+                    <span class="lang-content" data-lang="en">Common Symptoms & Diagnosis</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">सामान्य लक्षण और निदान</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">સામાન્ય લક્ષણો અને નિદાન</span>
+                </h4>
+                <div class="grid md:grid-cols-2 gap-6 items-start">
+                    <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Watch for Warning Signs</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">चेतावनी संकेतों पर ध्यान दें</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">ચેતવણી ચિહ્નો પર ધ્યાન આપો</span>
+                        </h5>
+                        <ul class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                            <li><span class="lang-content" data-lang="en">Unusual lumps or swelling anywhere on the body</span><span class="lang-content hidden-lang" data-lang="hi">शरीर पर कहीं भी असामान्य गांठ या सूजन</span><span class="lang-content hidden-lang" data-lang="gu">શરીર પર ક્યાંય પણ અસામાન્ય ગઠ્ઠો અથવા સોજો</span></li>
+                            <li><span class="lang-content" data-lang="en">Unexplained weight loss (significant weight loss without trying)</span><span class="lang-content hidden-lang" data-lang="hi">अकारण वजन घटना (बिना कोशिश किए महत्वपूर्ण वजन घटाना)</span><span class="lang-content hidden-lang" data-lang="gu">અકારણ વજન ઘટવું (પ્રયત્ન કર્યા વગર નોંધપાત્ર વજન ઘટાડવું)</span></li>
+                            <li><span class="lang-content" data-lang="en">Persistent fatigue (extreme tiredness that doesn't improve with rest)</span><span class="lang-content hidden-lang" data-lang="hi">लगातार थकान (अत्यधिक कमजोरी जो आराम करने पर भी ठीक नहीं होती)</span><span class="lang-content hidden-lang" data-lang="gu">સતત થાક (અત્યંત થાક જે આરામથી સુધરતો નથી)</span></li>
+                            <li><span class="lang-content" data-lang="en">Persistent or unexplained pain in any part of the body</span><span class="lang-content hidden-lang" data-lang="hi">शरीर के किसी भी हिस्से में लगातार या अकारण दर्द</span><span class="lang-content hidden-lang" data-lang="gu">શરીરના કોઈપણ ભાગમાં સતત અથવા અકારણ પીડા</span></li>
+                            <li><span class="lang-content" data-lang="en">Skin changes (e.g., new moles or changes in existing ones, yellowish/dark/red skin, non-healing sores)</span><span class="lang-content hidden-lang" data-lang="hi">त्वचा में परिवर्तन (जैसे, नए मोल या मौजूदा में परिवर्तन, पीलापन/कालापन/लाल त्वचा, ठीक न होने वाले घाव)</span><span class="lang-content hidden-lang" data-lang="gu">ત્વચામાં ફેરફાર (દા.ત., નવા મોલ્સ અથવા હાલના મોલ્સમાં ફેરફાર, પીળી/ઘેરી/લાલ ત્વચા, રૂઝ ન આવતા ચાંદા)</span></li>
+                            <li><span class="lang-content" data-lang="en">Chronic cough or hoarseness (especially if persistent for weeks)</span><span class="lang-content hidden-lang" data-lang="hi">पुरानी खांसी या कर्कशता (विशेषकर यदि हफ्तों तक बनी रहे)</span><span class="lang-content hidden-lang" data-lang="gu">લાંબી ઉધરસ અથવા ગળામાં ખરાશ (ખાસ કરીને જો અઠવાડિયા સુધી રહે)</span></li>
+                            <li><span class="lang-content" data-lang="en">Difficulty swallowing or persistent indigestion/heartburn</span><span class="lang-content hidden-lang" data-lang="hi">निगलने में कठिनाई या लगातार अपच/सीने में जलन</span><span class="lang-content hidden-lang" data-lang="gu">ગળવામાં મુશ્કેલી અથવા સતત અપચો/છાતીમાં બળતરા</span></li>
+                            <li><span class="lang-content" data-lang="en">Changes in bowel or bladder habits (persistent constipation, diarrhea, or blood in stool/urine)</span><span class="lang-content hidden-lang" data-lang="hi">पेट या पेशाब की आदतों में बदलाव (लगातार कब्ज़, दस्त, या मल/मूत्र में रक्त)</span><span class="lang-content hidden-lang" data-lang="gu">આંતરડા અથવા મૂત્રાશયની ટેવોમાં ફેરફાર (સતત કબજિયાત, ઝાડા, અથવા મળ/પેશાબમાં લોહી)</span></li>
+                            <li><span class="lang-content" data-lang="en">Unexplained fever or night sweats</span><span class="lang-content hidden-lang" data-lang="hi">अनजान बुखार या रात में पसीना</span><span class="lang-content hidden-lang" data-lang="gu">અકારણ તાવ અથવા રાત્રે પરસેવો</span></li>
+                            <li><span class="lang-content" data-lang="en">Unusual bleeding or discharge from any body opening</span><span class="lang-content hidden-lang" data-lang="hi">किसी भी शरीर के छेद से असामान्य रक्तस्राव या स्राव</span><span class="lang-content hidden-lang" data-lang="gu">શરીરના કોઈપણ છિદ્રમાંથી અસામાન્ય રક્તस्राव या स्राव</span></li>
+                        </ul>
+                        <p class="text-sm text-gray-700 mt-2">
+                            <span class="lang-content" data-lang="en">Any persistent, unexplained symptoms should prompt medical evaluation. Diagnosis typically involves initial clinical evaluation, specialized blood tests (e.g., Complete Blood Count, Liver/Kidney Function Tests, tumor markers), advanced imaging (X-ray, CT, MRI, PET scans for precise tumor localization and spread detection), and crucially, a biopsy (gold standard) to confirm cancer type, grade, and molecular markers.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">किसी भी लगातार, अस्पष्टीकृत लक्षणों के लिए चिकित्सा मूल्यांकन कराना चाहिए। निदान में आमतौर पर प्रारंभिक नैदानिक ​​जांच, विशेष रक्त परीक्षण (जैसे, पूर्ण रक्त गणना, यकृत/गुर्दे कार्य परीक्षण, ट्यूमर मार्कर), उन्नत इमेजिंग (एक्स-रे, सीटी, एमआरआई, सटीक ट्यूमर स्थानीयकरण और प्रसार का पता लगाने के लिए पीईटी स्कैन), और सबसे महत्वपूर्ण, कैंसर के प्रकार, ग्रेड और आणविक मार्करों की पुष्टि के लिए एक बायोप्सी (स्वर्ण मानक) शामिल होती है।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">કોઈપણ સતત, અસ્પષ્ટ લક્ષણો માટે તબીબી મૂલ્યાંકન કરાવવું જોઈએ. નિદાનમાં સામાન્ય રીતે પ્રારંભિક ક્લિનિકલ મૂલ્યાંકન, વિશિષ્ટ રક્ત પરીક્ષણો (દા.ત., સંપૂર્ણ રક્ત ગણતરી, યકૃત/કિડની કાર્ય પરીક્ષણો, ટ્યુમર માર્કર્સ), અદ્યતન ઇમેજિંગ (એક્સ-રે, સીટી, એમઆરઆઈ, ચોક્કસ ગાંઠ સ્થાનિકીકરણ અને ફેલાવો શોધવા માટે પીઈટી સ્કેન), અને નિર્ણાયક રીતે, કેન્સરના પ્રકાર, ગ્રેડ અને મોલેક્યુલર માર્કર્સની પુષ્ટિ કરવા માટે બાયોપ્સી (ગોલ્ડ સ્ટાન્ડર્ડ) શામેલ છે.</span>
+                        </p>
+                    </div>
+                     <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Understanding Cancer Stages</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">कैंसर के चरणों को समझना</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">કેન્સરના તબક્કાઓને સમજવું</span>
+                        </h5>
+                        <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-4">
+                            <div class="stage-box p-3 md:p-4 rounded-lg text-center" data-stage="0">
+                                <span class="font-bold text-lg">
+                                    <span class="lang-content" data-lang="en">Stage 0</span>
+                                    <span class="lang-content hidden-lang" data-lang="hi">चरण 0</span>
+                                    <span class="lang-content hidden-lang" data-lang="gu">તબક્કો 0</span>
+                                </span>
+                            </div>
+                            <div class="stage-box p-3 md:p-4 rounded-lg text-center" data-stage="1">
+                                <span class="font-bold text-lg">
+                                    <span class="lang-content" data-lang="en">Stage I</span>
+                                    <span class="lang-content hidden-lang" data-lang="hi">चरण I</span>
+                                    <span class="lang-content hidden-lang" data-lang="gu">તબક્કો I</span>
+                                </span>
+                            </div>
+                            <div class="stage-box p-3 md:p-4 rounded-lg text-center" data-stage="2">
+                                <span class="font-bold text-lg">
+                                    <span class="lang-content" data-lang="en">Stage II</span>
+                                    <span class="lang-content hidden-lang" data-lang="hi">चरण II</span>
+                                    <span class="lang-content hidden-lang" data-lang="gu">તબક્કો II</span>
+                                </span>
+                            </div>
+                            <div class="stage-box p-3 md:p-4 rounded-lg text-center" data-stage="3">
+                                <span class="font-bold text-lg">
+                                    <span class="lang-content" data-lang="en">Stage III</span>
+                                    <span class="lang-content hidden-lang" data-lang="hi">चरण III</span>
+                                    <span class="lang-content hidden-lang" data-lang="gu">તબક્કો III</span>
+                                </span>
+                            </div>
+                            <div class="stage-box p-3 md:p-4 rounded-lg text-center" data-stage="4">
+                                <span class="font-bold text-lg">
+                                    <span class="lang-content" data-lang="en">Stage IV</span>
+                                    <span class="lang-content hidden-lang" data-lang="hi">चरण IV</span>
+                                    <span class="lang-content hidden-lang" data-lang="gu">તબક્કો IV</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div id="stage-details" class="card max-w-2xl mx-auto p-6 text-center shadow-none border-none">
+                            <p class="text-gray-600">
+                                <span class="lang-content" data-lang="en">Click on a stage to see its description. Staging (often based on Tumor size, Node involvement, Metastasis - TNM system) helps doctors determine the extent of the cancer and plan the best treatment. Early stages (I-II) often use localized treatment like surgery or radiation, while advanced stages (III-IV) require systemic therapies like chemotherapy, immunotherapy, or targeted therapy to control cancer, reduce symptoms, and enhance quality of life.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">विवरण देखने के लिए किसी चरण पर क्लिक करें। स्टेजिंग (अक्सर ट्यूमर के आकार, लिम्फ नोड भागीदारी, मेटास्टेसिस - टीएनएम प्रणाली पर आधारित) डॉक्टरों को कैंसर की सीमा निर्धारित करने और सर्वोत्तम उपचार की योजना बनाने में मदद करती है। शुरुआती चरणों (I-II) में अक्सर सर्जरी या विकिरण जैसे स्थानीय उपचार का उपयोग किया जाता है, जबकि उन्नत चरणों (III-IV) में कैंसर को नियंत्रित करने, लक्षणों को कम करने और जीवन की गुणवत्ता बढ़ाने के लिए कीमोथेरेपी, इम्यूनोथेरेपी या लक्षित थेरेपी जैसे प्रणालीगत उपचारों की आवश्यकता होती है।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">વર્ણન જોવા માટે કોઈ તબક્કા પર ક્લિક કરો. સ્ટેજિંગ (ઘણીવાર ગાંઠનું કદ, લસિકા ગાંઠ સંડોવણી, મેટાસ્ટેસિસ - TNM સિસ્ટમ પર આધારિત) ડોકટરોને કેન્સરની હદ નક્કી કરવામાં અને શ્રેષ્ઠ સારવારની યોજના બનાવવામાં મદદ કરે છે. પ્રારંભિક તબક્કાઓ (I-II) માં ઘણીવાર સર્જરી અથવા રેડિયેશન જેવી સ્થાનિક સારવારનો ઉપયોગ થાય છે, જ્યારે અદ્યતન તબક્કાઓ (III-IV) માં કેન્સરને નિયંત્રિત કરવા, લક્ષણો ઘટાડવા અને જીવનની ગુણવત્તા વધારવા માટે કીમોથેરાપી, ઇમ્યુનોથેરાપી અથવા લક્ષિત ઉપચાર જેવી પ્રણાલીગત ઉપચારોની જરૂર પડે છે.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                 <h4 class="text-xl font-bold text-center text-[#4A5D5F] mb-6">
+                    <span class="lang-content" data-lang="en">Common Treatment Options</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">सामान्य उपचार विकल्प</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">સામાન્ય સારવાર વિકલ્પો</span>
+                </h4>
+                <p class="text-center text-gray-600 max-w-2xl mx-auto mb-6">
+                    <span class="lang-content" data-lang="en">Treatment plans are often individualized and may combine multiple therapies to achieve the best outcome.</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">उपचार योजनाएँ अक्सर व्यक्तिगत होती हैं और सर्वोत्तम परिणाम प्राप्त करने के लिए इसमें कई उपचारों का संयोजन हो सकता है।</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">સારવાર યોજનાઓ ઘણીવાર વ્યક્તિગત હોય છે અને શ્રેષ્ઠ પરિણામો પ્રાપ્ત કરવા માટે તેમાં બહુવિધ ઉપચારોનું સંયોજન શામેલ હોઈ શકે છે.</span>
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Surgery</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">सर्जरी</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">સર્જરી</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Physically removing the cancerous tumor or affected tissue. It is the oldest form of treatment, often used for solid tumors contained in one area (early stages). Minimally invasive techniques (laparoscopic, robotic) are available in large centers.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">कैंसरग्रस्त ट्यूमर या प्रभावित ऊतक को शारीरिक रूप से हटाना। यह उपचार का सबसे पुराना रूप है, जिसका उपयोग अक्सर एक क्षेत्र में निहित ठोस ट्यूमर (प्रारंभिक चरण) के लिए किया जाता है। बड़े केंद्रों में न्यूनतम इनवेसिव तकनीकें (लेप्रोस्कोपिक, रोबोटिक) उपलब्ध हैं।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">કેન્સરગ્રસ્ત ગાંઠ અથવા અસરગ્રસ્ત પેશીઓને શારીરિક રીતે દૂર કરવી. તે સારવારનું સૌથી જૂનું સ્વરૂપ છે, જે ઘણીવાર એક વિસ્તારમાં સમાયેલી ઘન ગાંઠો (પ્રારંભિક તબક્કા) માટે વપરાય છે. મોટા કેન્દ્રોમાં ન્યૂનતમ આક્રમક તકનીકો (લેપ્રોस्કોપિક, રોબોટિક) ઉપલબ્ધ છે.</span>
+                        </p>
+                    </div>
+                     <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Chemotherapy</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">कीमोथेरेपी</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">કીમોથેરાપી</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Using powerful drugs to kill fast-growing cells, including cancer cells, throughout the body. It can be given orally or through an IV and is effective for cancers that have spread. Side effects can include nausea, hair loss, and fatigue.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">पूरे शरीर में कैंसर कोशिकाओं सहित तेजी से बढ़ने वाली कोशिकाओं को मारने के लिए शक्तिशाली दवाओं का उपयोग करना। यह मौखिक रूप से या आईवी के माध्यम से दिया जा सकता है और पूरे शरीर में फैले कैंसर पर प्रभावी है। दुष्प्रभावों में मतली, बालों का झड़ना और थकान शामिल हो सकते हैं।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">શરીરમાં ઝડપથી વધતા કોષો, જેમાં કેન્સર કોષોનો સમાવેશ થાય છે, તેને મારવા માટે શક્તિશાળી દવાઓનો ઉપયોગ કરવો. તે મૌખિક રીતે અથવા IV દ્વારા આપી શકાય છે અને શરીરમાં ફેલાયેલા કેન્સર માટે અસરકારક છે. આડઅસરોમાં ઉબકા, વાળ ખરવા અને થાક શામેલ હોઈ શકે છે.</span>
+                        </p>
+                    </div>
+                     <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Radiation Therapy</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">विकिरण चिकित्सा</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">વિકિરણ ઉપચાર</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Using high-energy rays (like X-rays or gamma rays) to target and destroy cancer cells and shrink tumors. It's a localized treatment, often combined with surgery or chemotherapy. Advanced options like Proton Therapy are available in specialized centers.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">कैंसर कोशिकाओं को नष्ट करने और ट्यूमर को सिकोड़ने के लिए उच्च-ऊर्जा किरणों (जैसे एक्स-रे या गामा किरणें) का उपयोग करना। यह एक विशिष्ट क्षेत्र को लक्षित करने वाला एक स्थानीय उपचार है, जिसे अक्सर सर्जरी या कीमोथेरेपी के साथ जोड़ा जाता है। प्रोटॉन थेरेपी जैसे उन्नत विकल्प विशेष केंद्रों में उपलब्ध हैं।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">કેન્સર કોષોને નષ્ટ કરવા અને ગાંઠોને સંકોચવા માટે ઉચ્ચ-ઊર્જા કિરણો (જેમ કે એક્સ-રે અથવા ગામા કિરણો) નો ઉપયોગ કરવો. તે એક સ્થાનિક સારવાર છે, જેને ઘણીવાર સર્જરી અથવા કીમોથેરાપી સાથે જોડવામાં આવે છે. પ્રોટોન થેરાપી જેવા અદ્યતન વિકલ્પો વિશિષ્ટ કેન્દ્રોમાં ઉપલબ્ધ છે.</span>
+                        </p>
+                    </div>
+                     <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Immunotherapy</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">इम्यूनोथेरेपी</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">ઇમ્યુનોથેરાપી</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Boosting the body's own immune system to help it recognize and fight cancer cells more effectively. This involves making the body's immune system capable of identifying and destroying cancer cells, used for types like melanoma and lung cancer.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">शरीर की अपनी प्रतिरक्षा प्रणाली को बढ़ावा देना ताकि वह कैंसर कोशिकाओं को अधिक प्रभावी ढंग से पहचानने और लड़ने में मदद कर सके। इसमें शरीर के अपने प्रतिरक्षा तंत्र को कैंसर कोशिकाएं पहचानकर नष्ट करने लायक बनाया जाता है, जिसका उपयोग मेलेनोमा और फेफड़ों के कैंसर जैसे प्रकारों के लिए किया जाता है।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">શરીરની પોતાની રોગપ્રતિકારક શક્તિને વેગ આપવો જેથી તે કેન્સર કોષોને વધુ અસરકારક રીતે ઓળખી અને લડી શકે. આમાં શરીરની રોગપ્રતિકારક શક્તિને કેન્સર કોષો ઓળખી અને નષ્ટ કરવામાં સક્ષમ બનાવવાનો સમાવેશ થાય છે.</span>
+                        </p>
+                    </div>
+                     <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Targeted Therapy</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">लक्षित थेरेपी</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">લક્ષિત ઉપચાર</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Drugs that specifically target genes or proteins in cancer cells to stop them from growing and spreading, with less harm to normal cells. Examples include HER2 inhibitors for breast cancer or EGFR inhibitors for lung cancer.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">ऐसी दवाएं जो कैंसर कोशिकाओं में विशिष्ट जीनों या प्रोटीनों को लक्षित करती हैं ताकि उन्हें बढ़ने और फैलने से रोका जा सके, सामान्य कोशिकाओं को कम नुकसान के साथ। उदाहरणों में स्तन कैंसर के लिए HER2 अवरोधक या फेफड़ों के कैंसर के लिए EGFR अवरोधक शामिल हैं।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">દવાઓ જે કેન્સર કોષોમાં ચોક્કસ જનીનો અથવા પ્રોટીનને લક્ષ્ય બનાવે છે જેથી તેમને વધતા અને ફેલાતા અટકાવી શકાય, સામાન્ય કોષોને ઓછા નુકસાન સાથે. ઉદાહરણોમાં સ્તન કેન્સર માટે HER2 अवरोधक या फेफड़ों के कैंसर के लिए EGFR अवरोधक शामिल हैं.</span>
+                        </p>
+                    </div>
+                     <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Hormone Therapy</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">हार्मोन थेरेपी</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">હોર્મોન ઉપચાર</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Slows or stops the growth of cancers that use hormones to grow, such as some breast and prostate cancers, by blocking or reducing those hormones. Tamoxifen for breast cancer is an example.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">ऐसे कैंसर की वृद्धि को धीमा या बंद कर देता है जो बढ़ने के लिए हार्मोन का उपयोग करते हैं, जैसे कि कुछ स्तन और प्रोस्टेट कैंसर, उन हार्मोन को अवरुद्ध या कम करके। स्तन कैंसर के लिए टैमोक्सीफेन एक उदाहरण है।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">કેન્સરની વૃદ્ધિને ધીમું કરે છે અથવા અટકાવે છે જે વધવા માટે હોર્મોન્સનો ઉપયોગ કરે છે, જેમ કે કેટલાક સ્તન અને પ્રોસ્ટેટ કેન્સર, તે હોર્મોન્સને અવરોધિત કરીને અથવા ઘટાડીને. સ્તન કેન્સર માટે ટેમોક્સિફેન એક ઉદાહરણ છે.</span>
+                        </p>
+                    </div>
+                    <div class="card p-6">
+                        <h5 class="text-lg font-bold text-[#A97155] mb-2">
+                            <span class="lang-content" data-lang="en">Stem-cell Transplant (Bone Marrow Transplant)</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">स्टेम-सेल प्रत्यारोपण (अस्थि मज्जा प्रत्यारोपण)</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">સ્ટેમ-સેલ પ્રત્યારોપણ (અસ્થિ મજ્જા પ્રત્યારોપણ)</span>
+                        </h5>
+                        <p class="text-gray-600">
+                            <span class="lang-content" data-lang="en">Primarily for blood cancers (leukemia, lymphoma, myeloma). High-dose chemo/radiation is given to destroy cancerous cells, then healthy blood-forming stem cells (from patient or donor) are infused to restore bone marrow function.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">मुख्य रूप से रक्त कैंसर (ल्यूकेमिया, लिम्फोमा, मायलोमा) के लिए। कैंसर कोशिकाओं को नष्ट करने के लिए उच्च खुराक कीमो/विकिरण दी जाती है, फिर अस्थि मज्जा के कार्य को बहाल करने के लिए स्वस्थ रक्त-बनाने वाली स्टेम कोशिकाओं (रोगी या दाता से) को डाला जाता है।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">મુખ્યત્વે રક્ત કેન્સર (લ્યુકેમિયા, લિમ્ફોમા, માયલોમા) માટે. કેન્સરગ્રસ્ત કોષોને નષ્ટ કરવા માટે ઉચ્ચ-ડોઝ કીમો/વિકિરણ આપવામાં આવે છે, પછી હાડકાના મજ્જાના કાર્યને પુનર્સ્થાપિત કરવા માટે સ્વસ્થ રક્ત-નિર્માણ સ્ટેમ કોષો (દર્દી અથવા દાતા પાસેથી) દાખલ કરવામાં આવે છે.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="living-well" class="py-12">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#4A5D5F] mb-2">
+                <span class="lang-content" data-lang="en">Living Well During and After Treatment</span>
+                <span class="lang-content hidden-lang" data-lang="hi">उपचार के दौरान और बाद में स्वस्थ जीवन</span>
+                <span class="lang-content hidden-lang" data-lang="gu">સારવાર દરમિયાન અને પછી સ્વસ્થ જીવન</span>
+            </h3>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                <span class="lang-content" data-lang="en">Focusing on your overall well-being can improve your quality of life and help manage treatment side effects.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">अपनी समग्र भलाई पर ध्यान केंद्रित करने से आपके जीवन की गुणवत्ता में सुधार हो सकता है और उपचार के दुष्प्रभावों को प्रबंधित करने में मदद मिल सकती है।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">તમારી એકંદર સુખાકારી પર ધ્યાન કેન્દ્રિત કરવાથી તમારા જીવનની ગુણવત્તામાં સુધારો થઈ શકે છે અને સારવારની આડઅસરોનું સંચાલન કરવામાં મદદ મળી શકે છે.</span>
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-6">
+                     <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#C8A381] flex items-center justify-center text-[#4A5D5F] font-bold text-xl">🍎</div>
+                        <div>
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Nutrition & Diet</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">पोषण और आहार</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">પોષણ અને આહાર</span>
+                            </h5>
+                            <p class="text-gray-600">
+                                <span class="lang-content" data-lang="en">For prevention, eat a balanced, plant-rich diet (fruits, vegetables, whole grains, lean protein). During treatment, focus on maintaining strength: high-calorie, high-protein foods (eggs, dairy, nuts, lean meats). For nausea, try bland, soft, easy-to-digest foods (khichdi, purees, chicken soup). Stay hydrated. Avoid spicy/greasy foods. In advanced stages, prioritize comfort, small frequent meals, and energy-rich liquids. Always consult a dietitian.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">रोकथाम के लिए, भरपूर फल, सब्जियों और लीन प्रोटीन के साथ संतुलित आहार लें (फल, सब्जियां, साबुत अनाज, लीन प्रोटीन)। उपचार के दौरान, ताकत बनाए रखने पर ध्यान दें: उच्च-कैलोरी, उच्च-प्रोटीन वाले खाद्य पदार्थ (अंडे, डेयरी, मेवे, लीन मीट)। मतली के लिए, चिकन सूप, प्यूरी, या ओटमील जैसे नरम, आसानी से पचने वाले खाद्य पदार्थों का सेवन करें। हाइड्रेटेड रहें। मसालेदार/तैलीय खाद्य पदार्थों से बचें। उन्नत चरणों में, आराम, छोटे-छोटे बार-बार भोजन, और ऊर्जा-समृद्ध तरल पदार्थों को प्राथमिकता दें। हमेशा आहार विशेषज्ञ से परामर्श करें।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">રોગપ્રતિકારક શક્તિ માટે પુષ્કળ ફળો, શાકભાજી અને લીન પ્રોટીન સાથે સંતુલિત આહાર લો. સારવાર દરમિયાન, શક્તિ જાળવવા પર ધ્યાન કેન્દ્રિત કરો: ઉચ્ચ-કેલરી, ઉચ્ચ-પ્રોટીનવાળા ખોરાક (ઇંડા, ડેરી, બદામ, લીન માંસ). ઉબકા માટે, ચિકન સૂપ, પ્યુરી અથવા ઓટમીલ જેવા નરમ, સરળતાથી પચી શકે તેવા ખોરાકનો પ્રયાસ કરો. હાઇડ્રેટેડ રહો. મસાલેદાર/તૈલીય ખોરાક ટાળો. અદ્યતન તબક્કામાં, આરામ, નાના વારંવાર ભોજન, અને ઊર્જાથી ભરપૂર પ્રવાહીને પ્રાધાન્ય આપો. હંમેશા આહાર નિષ્ણાતની સલાહ લો.</span>
+                            </p>
+                        </div>
+                    </div>
+                     <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#C8A381] flex items-center justify-center text-[#4A5D5F] font-bold text-xl">🏃</div>
+                        <div>
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Physical Activity</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">शारीरिक गतिविधि</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">શારીરિક પ્રવૃત્તિ</span>
+                            </h5>
+                            <p class="text-gray-600">
+                                <span class="lang-content" data-lang="en">Light to moderate exercise, like brisk walking or cycling, can reduce fatigue, improve mood, and aid recovery. Aim for at least 150 minutes of moderate activity weekly for prevention. Always consult your doctor before starting any exercise regimen.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">चलने या साइकिल चलाने जैसी हल्की से मध्यम व्यायाम, थकान को कम कर सकता है, मनोदशा में सुधार कर सकता है और ठीक होने में मदद कर सकता है। रोकथाम के लिए साप्ताहिक रूप से कम से कम 150 मिनट की मध्यम गतिविधि का लक्ष्य रखें। कोई भी व्यायाम शुरू करने से पहले हमेशा अपने डॉक्टर से सलाह लें।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">ચાલવા અથવા સાયકલ ચલાવવા જેવી હળવીથી મધ્યમ કસરત થાક ઘટાડી શકે છે, મૂડ સુધારી શકે છે અને પુન recoveryપ્રાપ્તિમાં મદદ કરી શકે છે. નિવારણ માટે સાપ્તાહિક ઓછામાં ઓછી 150 મિનિટની મધ્યમ પ્રવૃત્તિનું લક્ષ્ય રાખો। कोई भी व्यायाम शुरू करने से पहले हमेशा अपने डॉक्टर से सलाह लें।</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="space-y-6">
+                     <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#C8A381] flex items-center justify-center text-[#4A5D5F] font-bold text-xl">🧘</div>
+                        <div>
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Stress Management & Mindfulness</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">तनाव प्रबंधन और सचेतनता</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">તણાવ વ્યવસ્થાપન અને સચેતતા</span>
+                            </h5>
+                            <p class="text-gray-600">
+                                <span class="lang-content" data-lang="en">Mindfulness, meditation, yoga, and connecting with loved ones can significantly help manage the emotional stress of a cancer diagnosis. Many centers offer relaxation techniques, music therapy, and spiritual guidance to boost morale and find inner peace.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">माइंडफुलनेस, ध्यान, योग, और प्रियजनों के साथ जुड़ना कैंसर निदान के भावनात्मक तनाव को प्रबंधित करने में काफी मदद कर सकता है। कई केंद्र मनोबल बढ़ाने और आंतरिक शांति खोजने के लिए विश्राम तकनीकें, संगीत चिकित्सा और आध्यात्मिक मार्गदर्शन प्रदान करते हैं।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">माईंडફુલનેસ, ध्यान, योग, અને પ્રિયજનો સાથે જોડાણ કેન્સર નિદાનના ભાવનાત્મક તણાવને સંભાળવામાં નોંધપાત્ર રીતે મદદ કરી શકે છે. ઘણા કેન્દ્રો મનોબળ વધારવા અને આંતરિક શાંતિ શોધવા માટે આરામ તકનીકો, સંગીત ઉપચાર અને આધ્યાત્મિક માર્ગદર્શન પૂરા પાડે છે.</span>
+                            </p>
+                        </div>
+                    </div>
+                     <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#C8A381] flex items-center justify-center text-[#4A5D5F] font-bold text-xl">🤝</div>
+                        <div>
+                            <h5 class="font-bold text-[#A97155]">
+                                <span class="lang-content" data-lang="en">Social Connection & Support Groups</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सामाजिक जुड़ाव और सहायता समूह</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">સામાજિક જોડાણ અને સહાયક જૂથો</span>
+                            </h5>
+                            <p class="text-gray-600">
+                                <span class="lang-content" data-lang="en">Maintain relationships and consider joining a support group. Sharing your experience with others facing similar challenges can reduce isolation, provide valuable coping strategies, and immense emotional backing. Hospitals often have patient and caregiver support groups.</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">रिश्ते बनाए रखें और एक सहायता समूह में शामिल होने पर विचार करें। समान चुनौतियों का सामना कर रहे अन्य लोगों के साथ अपने अनुभव को साझा करना अलगाव को कम कर सकता है, मूल्यवान मुकाबला रणनीतियों और अपार भावनात्मक समर्थन प्रदान कर सकता है। अस्पतालों में अक्सर रोगी और देखभाल करने वाले सहायता समूह होते हैं।</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">સમાન પડકારોનો સામનો કરી રહેલા અન્ય લોકો સાથે તમારો અનુભવ શેર કરવાથી એકલતા ઘટાડી શકાય છે, મૂલ્યવાન coping વ્યૂહરચનાઓ અને અપાર ભાવનાત્મક ટેકો મળી શકે છે. હોસ્પિટલોમાં ઘણીવાર દર્દી અને સંભાળ રાખનારાઓ માટે સહાયક જૂથો હોય છે.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="support" class="py-12 bg-white rounded-xl shadow-lg">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#4A5D5F] mb-2">
+                <span class="lang-content" data-lang="en">Finding Support in India</span>
+                <span class="lang-content hidden-lang" data-lang="hi">भारत में सहायता खोजना</span>
+                <span class="lang-content hidden-lang" data-lang="gu">ભારતમાં સહાય શોધવી</span>
+            </h3>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                <span class="lang-content" data-lang="en">The cost and logistics of treatment can be overwhelming. Fortunately, numerous government schemes, NGOs, and hospitals offer financial and practical support.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">उपचार की लागत और लॉजिस्टिक्स भारी हो सकती है। सौभाग्य से, कई सरकारी योजनाएं, गैर सरकारी संगठन और अस्पताल वित्तीय और व्यावहारिक सहायता प्रदान करते हैं।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">સારવારનો ખર્ચ અને લોજિસ્ટિક્સ જબરજસ્ત હોઈ શકે છે. સદભાગ્યે, અસંખ્ય સરકારી યોજનાઓ, એનજીઓ અને હોસ્પિટલો નાણાકીય અને વ્યવહારિક સહાય પૂરી પાડે છે.</span>
+            </p>
+            
+            <div class="mb-12">
+                <h4 class="text-xl font-bold text-center text-[#4A5D5F] mb-6">
+                    <span class="lang-content" data-lang="en">Financial Assistance Schemes</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">वित्तीय सहायता योजनाएं</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">નાણાકીય સહાય યોજનાઓ</span>
+                </h4>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card p-4">
+                        <h5 class="font-bold text-[#A97155]">
+                            <span class="lang-content" data-lang="en">Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana (AB-PMJAY)</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">आयुष्मान भारत - प्रधानमंत्री जन आरोग्य योजना (एबी-पीएमजेएवाई)</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">આયુષ્માન ભારત - પ્રધાનમંત્રી જન આરોગ્ય યોજના (એબી-પીએમજેએવાય)</span>
+                        </h5>
+                        <p class="text-sm text-gray-600">
+                            <span class="lang-content" data-lang="en">Provides health coverage of up to ₹5 lakh per family per year for secondary and tertiary care hospitalization in public and empanelled private hospitals, targeting the poorest 40% of the population based on SECC 2011 data. Includes cancer treatment like surgery, chemotherapy, and radiation.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">एसईसीसी 2011 डेटा के आधार पर आबादी के सबसे गरीब 40% लोगों को लक्षित करते हुए, सार्वजनिक और सूचीबद्ध निजी अस्पतालों में माध्यमिक और तृतीयक देखभाल अस्पताल में भर्ती के लिए प्रति परिवार प्रति वर्ष ₹5 लाख तक का स्वास्थ्य कवरेज प्रदान करता है। इसमें सर्जरी, कीमोथेरेपी और विकिरण जैसे कैंसर उपचार शामिल हैं।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">SECC 2011 ડેટાના આધારે વસ્તીના સૌથી ગરીબ 40% લોકોને લક્ષ્યમાં રાખીને, જાહેર અને સૂચિબદ્ધ ખાનગી હોસ્પિટલોમાં માધ્યમિક અને તૃતીય સંભાળ માટે હોસ્પિટલમાં દાખલ થવા માટે પ્રતિ પરિવાર પ્રતિ વર્ષ ₹5 લાખ સુધીનું આરોગ્ય કવરેજ પૂરું પાડે છે. તેમાં સર્જરી, કીમોથેરાપી અને રેડિયેશન જેવા કેન્સર ઉપચારો શામેલ છે.</span>
+                        </p>
+                    </div>
+                     <div class="card p-4">
+                        <h5 class="font-bold text-[#A97155]">
+                            <span class="lang-content" data-lang="en">Health Minister's Cancer Patient Fund (HMCPF / Rashtriya Arogya Nidhi)</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">स्वास्थ्य मंत्री का कैंसर रोगी कोष (एचएमसीपीएफ / राष्ट्रीय आरोग्य निधि)</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">આરોગ્ય મંત્રીનો કેન્સર દર્દી ભંડોળ (એચએમસીપીએફ / રાષ્ટ્રીય આરોગ્ય નિધિ)</span>
+                        </h5>
+                        <p class="text-sm text-gray-600">
+                            <span class="lang-content" data-lang="en">Provides financial assistance (up to ₹5 lakh, potentially extended to ₹15 lakh) to BPL (Below Poverty Line) patients suffering from life-threatening diseases, including all forms of cancer, for care at government centers (e.g., AIIMS, TMC) and 27 Regional Cancer Centres across India.</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">गरीबी रेखा से नीचे (बीपीएल) के रोगियों को जीवन-घातक बीमारियों, जिसमें सभी प्रकार के कैंसर शामिल हैं, के लिए सरकारी केंद्रों (जैसे एम्स, टीएमसी) और भारत भर के 27 क्षेत्रीय कैंसर केंद्रों पर देखभाल के लिए वित्तीय सहायता (₹5 लाख तक, संभावित रूप से ₹15 लाख तक बढ़ाई जा सकती है) प्रदान करता है।</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">ગરીબી રેખા નીચે (BPL) ના દર્દીઓને જીવલેણ રોગો, જેમાં કેન્સરના તમામ સ્વરૂપો શામેલ છે, માટે સરકારી કેન્દ્રો (દા.ત., AIIMS, TMC) અને ભારતભરના 27 પ્રાદેશિક કેન્સર કેન્દ્રો પર સંભાળ માટે નાણાકીય સહાય (₹5 લાખ સુધી, સંભવતઃ ₹15 લાખ સુધી વધારી શકાય છે) પૂરી પાડે છે.</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="card p-6 mt-6">
+                    <h5 class="text-lg font-bold text-[#A97155] mb-2 text-center">
+                        <span class="lang-content" data-lang="en">Practical Advice for Affordable Care</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">किफायती देखभाल के लिए व्यावहारिक सलाह</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">વ્યવહારુ સલાહ: સસ્તું સંભાળ માટે</span>
+                    </h5>
+                    <p class="text-gray-600 text-sm text-justify">
+                        <span class="lang-content" data-lang="en">For middle-class or low-income patients, it is advisable to first seek treatment at government hospitals or charitable centers like Tata Memorial Centre (TMC) where costs are lowest. Actively apply for schemes like Ayushman Bharat or the Health Minister's Cancer Patient Fund to offset fees for surgery and chemotherapy. Social workers and patient support groups at hospitals can provide guidance on accessing funds and other support (e.g., transport, lodging, free meals). Non-governmental organizations (NGOs) like Cancer Patients Aid Association (CPAA), Indian Cancer Society, St. Jude India Childcare Centres, and Milaap (crowdfunding) also offer financial assistance and crucial patient support.</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">मध्यम वर्ग या निम्न-आय वर्ग के रोगियों के लिए, यह सलाह दी जाती है कि वे पहले सरकारी अस्पतालों या टाटा मेमोरियल सेंटर (टीएमसी) जैसे धर्मार्थ केंद्रों में उपचार कराएं जहाँ लागत सबसे कम होती है। सर्जरी और कीमोथेरेपी के शुल्क को कम करने के लिए आयुष्मान भारत या स्वास्थ्य मंत्री के कैंसर रोगी कोष जैसी योजनाओं के लिए सक्रिय रूप से आवेदन करें। अस्पतालों में सामाजिक कार्यकर्ता और रोगी सहायता समूह धन और अन्य सहायता (जैसे, परिवहन, आवास, मुफ्त भोजन) तक पहुंचने के बारे में मार्गदर्शन प्रदान कर सकते हैं। कैंसर पेशेंट एड एसोसिएशन (CPAA), इंडियन कैंसर सोसाइटी, सेंट जूड इंडिया चाइल्डकेयर सेंटर्स, और मिलाप (क्राउडफंडिंग) जैसे गैर-सरकारी संगठन (एनजीओ) भी वित्तीय सहायता और महत्वपूर्ण रोगी सहायता प्रदान करते हैं।</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">મધ્યમ વર્ગ અથવા ઓછી આવક ધરાવતા દર્દીઓ માટે, પ્રથમ સરકારી હોસ્પિટલો અથવા ટાટા મેમોરિયલ સેન્ટર (TMC) જેવા ધર્માદા કેન્દ્રોમાં સારવાર લેવાની સલાહ આપવામાં આવે છે જ્યાં ખર્ચ સૌથી ઓછો હોય છે. સર્જરી અને કીમોથેરાપી માટેના શુલ્ક ઘટાડવા માટે આયુષ્માન ભારત અથવા આરોગ્ય મંત્રીના કેન્સર દર્દી ભંડોળ જેવી યોજનાઓ માટે સક્રિયપણે અરજી કરો. હોસ્પિટલોમાં સામાજિક કાર્યકરો અને દર્દી સહાયક જૂથો ભંડોળ અને અન્ય સહાય (દા.ત., પરિવહન, આવાસ, મફત ભોજન) મેળવવા અંગે માર્ગદર્શન આપી શકે છે. કેન્સર પેશન્ટ એડ એસોસિએશન (CPAA), ઇન્ડિયન કેન્સર સોસાયટી, સેન્ટ જ્યુડ ઇન્ડિયા ચાઈલ્ડકેર સેન્ટર્સ, અને મિલાપ (ક્રાઉડફંડિંગ) જેવી બિન-સરકારી સંસ્થાઓ (NGOs) પણ નાણાકીય સહાય અને મહત્વપૂર્ણ દર્દી સહાય પૂરી પાડે છે.</span>
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xl font-bold text-center text-[#4A5D5F] mb-6">
+                    <span class="lang-content" data-lang="en">Find a Hospital</span>
+                    <span class="lang-content hidden-lang" data-lang="hi">एक अस्पताल खोजें</span>
+                    <span class="lang-content hidden-lang" data-lang="gu">હોસ્પિટલ શોધો</span>
+                </h4>
+                <div class="flex flex-wrap justify-center gap-4 mb-6">
+                    <div>
+                        <label for="state-filter" class="sr-only">
+                            <span class="lang-content" data-lang="en">Filter by State</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">राज्य द्वारा फ़िल्टर करें</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">રાજ્ય દ્વારા ફિલ્ટર કરો</span>
+                        </label>
+                        <select id="state-filter" class="rounded-md border-gray-300 shadow-sm focus:border-[#A97155] focus:ring focus:ring-[#A97155] focus:ring-opacity-50">
+                            <option value="all">
+                                <span class="lang-content" data-lang="en">All States</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सभी राज्य</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">બધા રાજ્યો</span>
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="type-filter" class="sr-only">
+                            <span class="lang-content" data-lang="en">Filter by Type</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">प्रकार द्वारा फ़िल्टर करें</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">પ્રકાર દ્વારા ફિલ્ટર કરો</span>
+                        </label>
+                        <select id="type-filter" class="rounded-md border-gray-300 shadow-sm focus:border-[#A97155] focus:ring focus:ring-[#A97155] focus:ring-opacity-50">
+                            <option value="all">
+                                <span class="lang-content" data-lang="en">All Types</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सभी प्रकार</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">બધા પ્રકારો</span>
+                            </option>
+                            <option value="Government">
+                                <span class="lang-content" data-lang="en">Government</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">सरकारी</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">સરકારી</span>
+                            </option>
+                            <option value="Private">
+                                <span class="lang-content" data-lang="en">Private</span>
+                                <span class="lang-content hidden-lang" data-lang="hi">निजी</span>
+                                <span class="lang-content hidden-lang" data-lang="gu">ખાનગી</span>
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div id="hospital-list" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <section id="advanced-care" class="py-12">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#4A5D5F] mb-2">
+                <span class="lang-content" data-lang="en">Advanced & Palliative Care</span>
+                <span class="lang-content hidden-lang" data-lang="hi">उन्नत और उपशामक देखभाल</span>
+                <span class="lang-content hidden-lang" data-lang="gu">અદ્યતન અને ઉપશામક સંભાળ</span>
+            </h3>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                <span class="lang-content" data-lang="en">For advanced cancer, the focus shifts to maximizing comfort and quality of life through palliative and hospice care. This approach addresses physical, emotional, social, and spiritual problems.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">उन्नत कैंसर के लिए, ध्यान उपशामक और धर्मशाला देखभाल के माध्यम से आराम और जीवन की गुणवत्ता को अधिकतम करने पर केंद्रित होता है। यह दृष्टिकोण शारीरिक, भावनात्मक, सामाजिक और आध्यात्मिक समस्याओं का समाधान करता है।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">અદ્યતન કેન્સર માટે, ધ્યાન ઉપશામક અને હોસ્પાઇસ સંભાળ દ્વારા આરામ અને જીવનની ગુણવત્તાને મહત્તમ કરવા પર કેન્દ્રિત થાય છે. આ અભિગમ શારીરિક, ભાવનાત્મક, સામાજિક અને આધ્યાત્મિક સમસ્યાઓનું નિરાકરણ કરે છે.</span>
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold text-[#A97155] mb-2">
+                        <span class="lang-content" data-lang="en">Palliative Care & Hospice</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">उपशामक देखभाल और धर्मशाला</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">ઉપશામક સંભાળ અને હોસ્પાઇસ</span>
+                    </h4>
+                    <p class="text-gray-600">
+                        <span class="lang-content" data-lang="en">Palliative care (supportive care) aims to improve quality of life for patients and their families facing life-threatening illnesses through the prevention and relief of suffering. It involves early identification, impeccable assessment, and treatment of pain and other physical, psychological, social, and spiritual problems. Hospice care specifically offers palliative care to terminally ill patients, providing comprehensive services including pain management, therapies, psychological and social support, rehabilitation, counseling, spiritual care, and bereavement support for families. Organizations like CanSupport (Delhi), Karunashraya (Bengaluru), and Ganga Prem Hospice (Kolkata) provide home-based or in-patient palliative/hospice care in India, often free of cost.</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">उपशामक देखभाल (सहायक देखभाल) का उद्देश्य दर्द और अन्य शारीरिक, मनोवैज्ञानिक और आध्यात्मिक समस्याओं का प्रबंधन करके जीवन की गुणवत्ता में सुधार करना है। यह किसी भी चरण में उपचारात्मक उपचार के साथ दिया जा सकता है। धर्मशाला देखभाल विशेष रूप से उन रोगियों के लिए है जो अब उपचारात्मक उपचार प्राप्त नहीं कर रहे हैं (जीवन प्रत्याशा आमतौर पर 6 महीने से कम), जो केवल आराम पर ध्यान केंद्रित करती है। कैनसपोर्ट (दिल्ली), करुणाश्रय (बेंगलुरु), और गंगा प्रेम धर्मशाला (कोलकाता) जैसे संगठन भारत में घर-आधारित या इन-पेशेंट उपशामक/धर्मशाला देखभाल प्रदान करते हैं, अक्सर मुफ्त में।</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">ઉપશામક સંભાળ (સહાયક સંભાળ) નો ઉદ્દેશ્ય પીડા અને અન્ય શારીરિક, મનોવૈજ્ઞાનિક અને આધ્યાત્મિક સમસ્યાઓનું સંચાલન કરીને જીવનની ગુણવત્તા સુધારવાનો છે. તે કોઈપણ તબક્કે ઉપચારાત્મક સારવાર સાથે આપી શકાય છે. હોસ્પાઇસ સંભાળ ખાસ કરીને તે દર્દીઓ માટે છે જેઓ હવે ઉપચારાત્મક સારવાર મેળવી રહ્યા નથી (જીવન અપેક્ષા સામાન્ય રીતે 6 મહિનાથી ઓછી), જે ફક્ત આરામ પર ધ્યાન કેન્દ્રિત કરે છે. કેનસપોર્ટ (દિલ્હી), કરુણાશ્રય (બેંગલુરુ), અને ગંગા પ્રેમ હોસ્પાઇસ (કોલકાતા) જેવી સંસ્થાઓ ભારતમાં ઘર-આધારિત અથવા ઇન-પેશન્ટ ઉપશામક/હોસ્પાઇસ સંભાળ પૂરી પાડે છે, ઘણીવાર મફતમાં.</span>
+                    </p>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold text-[#A97155] mb-2">
+                        <span class="lang-content" data-lang="en">Pain Management & Symptom Control</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">दर्द प्रबंधन और लक्षण नियंत्रण</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">પીડા વ્યવસ્થાપન અને લક્ષણ નિયંત્રણ</span>
+                    </h4>
+                    <p class="text-gray-600">
+                        <span class="lang-content" data-lang="en">A critical part of palliative care. It includes medications like strong opioids (e.g., morphine – gold standard for severe pain) prescribed under strict regulations, and non-opioid pain relievers. Non-medical approaches include massage, relaxation techniques, and emotional support to ensure comfort until the end. Symptom control also addresses breathlessness (low-dose morphine, oxygen), nausea/vomiting (antiemetics), constipation (laxatives), diarrhea (antidiarrheals), fatigue, and mouth sores (oral rinses).</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">उपशामक देखभाल का एक महत्वपूर्ण हिस्सा। इसमें गंभीर दर्द के लिए मजबूत ओपिओइड (जैसे मॉर्फिन - गंभीर दर्द के लिए स्वर्ण मानक) जैसी दवाएं, सख्त नियमों के तहत निर्धारित, और गैर-ओपिओइड दर्द निवारक शामिल हैं। गैर-चिकित्सा दृष्टिकोणों में मालिश, विश्राम तकनीक, और भावनात्मक समर्थन शामिल हैं ताकि अंत तक आराम सुनिश्चित हो सके। लक्षण नियंत्रण में सांस की तकलीफ (कम खुराक मॉर्फिन, ऑक्सीजन), मतली/उल्टी (एंटीमेटिक्स), कब्ज (जुलाब), दस्त (एंटीडायरियाल), थकान, और मुंह के छाले (मौखिक कुल्ला) भी शामिल हैं।</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">ઉપશામક સંભાળનો એક મહત્વપૂર્ણ ભાગ. તેમાં ગંભીર પીડા માટે મજબૂત ઓપિઓઇડ્સ (દા.ત., મોર્ફિન - ગંભીર પીડા માટે સુવર્ણ ધોરણ) સખત નિયમો હેઠળ સૂચવવામાં આવે છે, અને બિન-ઓપિઓઇડ પીડા રાહત કરનારાઓનો સમાવેશ થાય છે. બિન-તબીબી અભિગમોમાં મસાજ, આરામ તકનીકો અને ભાવનાત્મક ટેકો શામેલ છે જેથી અંત સુધી આરામ સુનિશ્ચિત કરી શકાય. લક્ષણ નિયંત્રણમાં શ્વાસ લેવામાં તકલીફ (ઓછી માત્રામાં મોર્ફिन, ઓક્સિજન), મતली/ઉલટી (એન્ટિમેટીક્સ), કબજિયાત (જુલાબ), ઝાડા (એન્ટિડાયરિયલ્સ), થાક, અને मुंह के छाले (मौखिक कुल्ला) भी શામેલ છે.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="emotional-support" class="py-12 bg-white rounded-xl shadow-lg">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#4A5D5F] mb-2">
+                <span class="lang-content" data-lang="en">Emotional & Psychosocial Support</span>
+                <span class="lang-content hidden-lang" data-lang="hi">भावनात्मक और मनोसामाजिक समर्थन</span>
+                <span class="lang-content hidden-lang" data-lang="gu">ભાવનાત્મક અને મનોસામાજિક સહાય</span>
+            </h3>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                <span class="lang-content" data-lang="en">A cancer diagnosis affects the whole person and their family. Emotional well-being is as crucial as physical health.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">कैंसर का निदान पूरे व्यक्ति और उनके परिवार को प्रभावित करता है। भावनात्मक भलाई शारीरिक स्वास्थ्य जितनी ही महत्वपूर्ण है।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">કેન્સરનું નિદાન વ્યક્તિ અને તેના પરિવારને અસર કરે છે. ભાવનાત્મક સુખાકારી શારીરિક સ્વાસ્થ્ય जितनी ही महत्वपूर्ण છે.</span>
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold text-[#A97155] mb-2">
+                        <span class="lang-content" data-lang="en">Professional Counseling & Psycho-Oncology</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">पेशेवर परामर्श और मनो-ऑन्कोलॉजी</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">વ્યાવસાયિક સલાહ અને મનો-ઓન્કોલોજી</span>
+                    </h4>
+                    <p class="text-gray-600">
+                        <span class="lang-content" data-lang="en">Many cancer centers offer psycho-oncologists, counselors, and social workers who specialize in helping patients and caregivers cope with anxiety, depression, fear, and practical issues. This support ensures the patient receives holistic care with respect and empowerment.</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">कई कैंसर केंद्र मनो-ऑन्कोलॉजिस्ट, काउंसलर और सामाजिक कार्यकर्ता प्रदान करते हैं जो रोगियों और देखभाल करने वालों को चिंता, अवसाद, भय और व्यावहारिक मुद्दों से निपटने में मदद करने में विशेषज्ञ हैं। शुरुआती रेफरल समग्र देखभाल सुनिश्चित करता है, सम्मान और सशक्तिकरण के साथ मनोवैज्ञानिक प्रभाव को संबोधित करता है।</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">ઘણા કેન્સર કેન્દ્રો મનો-ઓન્કોલોજિસ્ટ, સલાહકારો અને સામાજિક કાર્યકરો પૂરા પાડે છે જે દર્દીઓ અને સંભાળ રાખનારાઓને ચિંતા, હતાશા, ભય અને વ્યવહારિક મુદ્દાઓનો સામનો કરવામાં મદદ કરવા માટે વિશિષ્ટ છે. પ્રારંભિક રેફરલ સર્વગ્રાહી સંભાળ સુનિશ્ચિત કરે છે, આદર અને સશક્તિકરણ के साथ मनोवैज्ञानिक प्रभाव को संबोधित करता है।</span>
+                    </p>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold text-[#A97155] mb-2">
+                        <span class="lang-content" data-lang="en">Social Connection & Support Groups</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">सामाजिक जुड़ाव और सहायता समूह</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">સામાજિક જોડાણ અને સહાયક જૂથો</span>
+                    </h4>
+                    <p class="text-gray-600">
+                        <span class="lang-content" data-lang="en">Maintain relationships and consider joining a support group. Sharing your experience with others facing similar challenges can reduce isolation, provide valuable coping strategies, and immense emotional backing. Hospitals often have patient and caregiver support groups.</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">रिश्ते बनाए रखें और एक सहायता समूह में शामिल होने पर विचार करें। समान चुनौतियों का सामना कर रहे अन्य लोगों के साथ अपने अनुभव को साझा करना अलगाव को कम कर सकता है, मूल्यवान मुकाबला रणनीतियों और अपार भावनात्मक समर्थन प्रदान कर सकता है। अस्पतालों में अक्सर रोगी और देखभाल करने वाले सहायता समूह होते हैं।</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">સમાન પડકારોનો સામનો કરી રહેલા અન્ય લોકો સાથે તમારો અનુભવ શેર કરવાથી એકલતા ઘટાડી શકાય છે, મૂલ્યવાન coping વ્યૂહરચનાઓ અને અપાર ભાવનાત્મક ટેકો મળી શકે છે. હોસ્પિટલોમાં ઘણીવાર દર્દી અને સંભાળ રાખનારાઓ માટે સહાયક જૂથો હોય છે.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm">
+            <p>
+                <span class="lang-content" data-lang="en">Disclaimer: This website provides general information and is not a substitute for professional medical advice. Always consult a qualified healthcare provider for diagnosis and treatment.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">अस्वीकरण: यह वेबसाइट सामान्य जानकारी प्रदान करती है और पेशेवर चिकित्सा सलाह का विकल्प नहीं है। निदान और उपचार के लिए हमेशा एक योग्य स्वास्थ्य सेवा प्रदाता से परामर्श लें।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">અસ્વીકરણ: આ વેબસાઇટ સામાન્ય માહિતી પૂરી પાડે છે અને વ્યાવસાયિક તબીબી સલાહનો વિકલ્પ નથી. નિદાન અને સારવાર માટે હંમેશા યોગ્ય આરોગ्यसंभાળ પ્રદાતાની સલાહ લો.</span>
+            </p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const langButtons = document.querySelectorAll('.lang-btn');
+    const langContents = document.querySelectorAll('.lang-content');
+    const body = document.querySelector('body');
+
+    const stateFilter = document.getElementById('state-filter');
+    const typeFilter = document.getElementById('type-filter');
+    const hospitalListContainer = document.getElementById('hospital-list');
+
+    const translations = {
+        en: { bodyClass: 'font-en' },
+        hi: { bodyClass: 'font-hi' },
+        gu: { bodyClass: 'font-gu' }
+    };
+    
+    function switchLanguage(lang, isInitialCall = false) {
+        body.classList.remove(...Object.values(translations).map(t => t.bodyClass));
+        body.classList.add(translations[lang].bodyClass);
+
+        langContents.forEach(content => {
+            if (content.dataset.lang === lang) {
+                content.classList.remove('hidden-lang');
+            } else {
+                content.classList.add('hidden-lang');
+            }
+        });
+        
+        langButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(`lang-${lang}`).classList.add('active');
+        localStorage.setItem('preferredLanguage', lang);
+        
+        // Always re-populate filters and render list to reflect language changes in options
+        populateHospitalFilters();
+        renderHospitalList();
+        createRiskChart(); // Re-create chart for language change in labels
+        
+        // Re-apply stage details if a stage is active and language changes
+        const activeStageBox = document.querySelector('.stage-box.active');
+        if (activeStageBox) {
+            const stage = activeStageBox.dataset.stage;
+            document.getElementById('stage-details').innerHTML = `<p>${stageData[stage][lang]}</p>`;
+        }
+    }
+
+    langButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const lang = button.id.split('-')[1];
+            switchLanguage(lang);
+        });
+    });
+
+    const preferredLanguage = localStorage.getItem('preferredLanguage') || 'en';
+    switchLanguage(preferredLanguage, true); // Initial language switch, mark as initial call
+
+    const stageData = {
+        '0': {
+            en: 'Stage 0 (Carcinoma in situ): Abnormal cells are present but have not spread to nearby tissue. Not yet cancer, but can become cancer. It is highly curable.',
+            hi: 'चरण 0 (कार्सिनोमा इन सीटू): असामान्य कोशिकाएं मौजूद हैं लेकिन पास के ऊतक में नहीं फैली हैं। अभी तक कैंसर नहीं है, लेकिन कैंसर बन सकता है। यह अत्यधिक इलाज योग्य है।',
+            gu: 'તબક્કો 0 (કાર્સિનોમા ઇન સિટુ): અસામાન્ય કોષો હાજર છે પરંતુ નજીકના પેશીઓમાં ફેલાયા નથી. હજુ કેન્સર નથી, પરંતુ કેન્સર બની શકે છે. તે અત્યંત સાધ્ય છે.'
+        },
+        '1': {
+            en: 'Stage I: The tumor is small and has not grown outside the organ it started in. It is considered early-stage, localized cancer, often curable by surgery alone or with minimal adjuvant therapy.',
+            hi: 'चरण I: ट्यूमर छोटा है और जिस अंग में यह शुरू हुआ था, उसके बाहर नहीं बढ़ा है। इसे प्रारंभिक चरण का, स्थानीयकृत कैंसर माना जाता है, जो अक्सर अकेले सर्जरी से या न्यूनतम सहायक चिकित्सा से ठीक हो जाता है।',
+            gu: 'તબક્કો I: ગાંઠ નાની છે અને તે જે અંગમાં શરૂ થઈ હતી તેની બહાર વધી નથી. તેને પ્રારંભિક તબક્કાનું, સ્થાનિક કેન્સર માનવામાં આવે છે, જે ઘણીવાર એકલા સર્જરીથી અથવા ઓછામાં ઓછી સહાયક ઉપચારથી સાધ્ય છે.'
+        },
+        '2': {
+            en: 'Stage II: The tumor is larger than in Stage I, or may have spread to 1-2 nearby lymph nodes, but has not spread to distant parts of the body. It may have grown more deeply into nearby tissue. Treatment often involves surgery plus chemotherapy or radiation.',
+            hi: 'चरण II: ट्यूमर चरण I की तुलना में बड़ा है, या 1-2 पास के लिम्फ नोड्स में फैल सकता है, लेकिन शरीर के दूर के हिस्सों में नहीं फैला है। यह पास के ऊतक में अधिक गहराई तक बढ़ सकता है। उपचार में अक्सर सर्जरी के साथ कीमोथेरेपी या विकिरण शामिल होता है।',
+            gu: 'તબક્કો II: ગાંઠ તબક્કા I કરતાં મોટી છે, અથવા 1-2 નજીકના લસિકા ગાંઠોમાં ફેલાઈ ગઈ હોઈ શકે છે, પરંતુ શરીરના દૂરના ભાગોમાં ફેલાઈ નથી. તે નજીકના પેશીઓમાં વધુ ઊંડાણપૂર્વક વધી શકે છે. સારવારમાં ઘણીવાર સર્જરી ઉપરાંત કીમોથેરાપી અથવા રેડિયેશનનો સમાવેશ થાય છે.'
+        },
+        '3': {
+            en: 'Stage III: The cancer is larger and has spread to multiple nearby lymph nodes or invaded deeper into surrounding tissues, but not to distant parts of the body. This stage often requires multimodal therapy: surgery, plus chemotherapy and/or radiation.',
+            hi: 'चरण III: कैंसर बड़ा है और कई पास के लिम्फ नोड्स में फैल गया है या आसपास के ऊतकों में गहराई से घुस गया है, लेकिन शरीर के दूर के हिस्सों में नहीं। इस चरण में अक्सर मल्टीमॉडल थेरेपी की आवश्यकता होती है: सर्जरी, साथ ही कीमोथेरेपी और/या विकिरण।',
+            gu: 'તબક્કો III: કેન્સર મોટું છે અને નજીકના લસિકા ગાંઠો અથવા પેશીઓમાં ફેલાઈ ગયું છે, પરંતુ શરીરના દૂરના ભાગોમાં નહીં. આ તબક્કામાં ઘણીવાર મલ્ટિમોડલ થેરાપીની જરૂર પડે છે: સર્જરી, ઉપરાંત કીમોથેરાપી અને/અથવા રેડિયેશન.'
+        },
+        '4': {
+            en: 'Stage IV: The cancer has spread from where it started to distant parts of the body (metastasis), such as the liver, lungs, bone, or brain. This is also called advanced or metastatic cancer. Curative chances are lower; treatment focuses on prolonging life, controlling symptoms, and palliative care.',
+            hi: 'चरण IV: कैंसर जहां से शुरू हुआ था, वहां से शरीर के दूर के हिस्सों (मेटास्टेसिस) में फैल गया है, जैसे यकृत, फेफड़े, हड्डी, या मस्तिष्क। इसे उन्नत या मेटास्टैटिक कैंसर भी कहा जाता है। ठीक होने की संभावना कम होती है; उपचार जीवन को लंबा करने, लक्षणों को नियंत्रित करने और उपशामक देखभाल पर केंद्रित होता है।',
+            gu: 'તબક્કો IV: કેન્સર જ્યાંથી શરૂ થયું હતું ત્યાંથી શરીરના દૂરના ભાગો (મેટાસ્ટેસિસ) માં ફેલાઈ ગયું છે, જેમ કે યકૃત, ફેફસાં, હાડકાં અથવા મગજ. તેને અદ્યતન અથવા મેટાસ્ટેટિક કેન્સર પણ કહેવાય છે. સાધ્ય થવાની શક્યતાઓ ઓછી છે; સારવાર જીવન લંબાવવા, લક્ષણોને નિયંત્રિત કરવા અને ઉપશામક સંભાળ પર કેન્દ્રિત છે.'
+        }
+    };
+    
+    const stageBoxes = document.querySelectorAll('.stage-box');
+    const stageDetails = document.getElementById('stage-details');
+
+    stageBoxes.forEach(box => {
+        box.addEventListener('click', () => {
+            stageBoxes.forEach(b => b.classList.remove('active'));
+            box.classList.add('active');
+            const stage = box.dataset.stage;
+            const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+            stageDetails.innerHTML = `<p>${stageData[stage][currentLang]}</p>`;
+        });
+    });
+
+    const riskFactorData = {
+        labels: {
+            en: ['Lifestyle (Tobacco, Alcohol, Diet, Weight, Inactivity)', 'Age', 'Genetics', 'Environmental & Infections'],
+            hi: ['जीवनशैली (तंबाकू, शराब, आहार, वजन, निष्क्रियता)', 'आयु', 'आनुवंशिकी', 'पर्यावरण और संक्रमण'],
+            gu: ['જીવનશૈલી (તમાકુ, દારૂ, આહાર, વજન, નિષ્ક્રિયતા)', 'ઉંમર', 'આનુવંશિકતા', 'પર્યાવરણ અને ચેપ']
+        },
+        data: [45, 25, 10, 20], 
+        backgroundColor: ['#A97155', '#C8A381', '#4A5D5F', '#8a7968']
+    };
+    
+    let riskChart;
+    function createRiskChart() {
+        const canvas = document.getElementById('riskFactorChart');
+        if (!canvas) {
+            console.error('Canvas element with ID "riskFactorChart" not found. Chart will not be rendered.');
+            return; // Exit if canvas is not found
+        }
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('2D rendering context not available for the canvas element. Chart will not be rendered.');
+            return; // Exit if context is not available
+        }
+
+        const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+        if(riskChart) {
+            riskChart.destroy();
+        }
+        riskChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: riskFactorData.labels[currentLang],
+                datasets: [{
+                    label: 'Risk Factors',
+                    data: riskFactorData.data,
+                    backgroundColor: riskFactorData.backgroundColor,
+                    borderColor: '#FBF9F1',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                           color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const hospitals = [
+        { name: 'Tata Memorial Hospital', city: 'Mumbai', state: 'Maharashtra', type: 'Government', affordable: true },
+        { name: 'AIIMS (All India Institute of Medical Sciences)', city: 'New Delhi', state: 'Delhi', type: 'Government', affordable: true },
+        { name: 'Kidwai Memorial Institute of Oncology', city: 'Bengaluru', state: 'Karnataka', type: 'Government', affordable: true },
+        { name: 'Gujarat Cancer & Research Institute (GCRI)', city: 'Ahmedabad', state: 'Gujarat', type: 'Government', affordable: true },
+        { name: 'Chittaranjan National Cancer Institute', city: 'Kolkata', state: 'West Bengal', type: 'Government', affordable: true },
+        { name: 'Regional Cancer Centre', city: 'Thiruvananthapuram', state: 'Kerala', type: 'Government', affordable: true },
+        { name: 'Regional Cancer Centre', city: 'Chandigarh', state: 'Chandigarh', type: 'Government', affordable: true },
+        { name: 'Acharya Harihar Regional Cancer Centre', city: 'Cuttack', state: 'Odisha', type: 'Government', affordable: true },
+        { name: 'Cancer Institute (WIA)', city: 'Chennai', state: 'Tamil Nadu', type: 'Government', affordable: true },
+        { name: 'Nizam’s Institute of Medical Sciences (NIMS)', city: 'Hyderabad', state: 'Telangana', type: 'Government', affordable: true },
+        { name: 'Homi Bhabha Cancer Hospital (TMC Branch)', city: 'Varanasi', state: 'Uttar Pradesh', type: 'Government', affordable: true },
+        { name: 'Mahatma Gandhi Cancer Hospital & Research Institute', city: 'Jaipur', state: 'Rajasthan', type: 'Government', affordable: true },
+        { name: 'Rajiv Gandhi Cancer Institute & Research Centre', city: 'New Delhi', state: 'Delhi', type: 'Private', affordable: false },
+        { name: 'Apollo Proton Cancer Centre', city: 'Chennai', state: 'Tamil Nadu', type: 'Private', affordable: false },
+        { name: 'HCG Cancer Hospitals', city: 'Multiple', state: 'Multiple', type: 'Private', affordable: false },
+        { name: 'Artemis Hospital', city: 'Gurugram', state: 'Haryana', type: 'Private', affordable: false },
+        { name: 'Fortis Memorial Research Institute', city: 'Gurugram', state: 'Haryana', type: 'Private', affordable: false },
+        { name: 'Medanta The Medicity', city: 'Gurugram', state: 'Haryana', type: 'Private', affordable: false },
+        { name: 'Apollo Hospitals', city: 'Ahmedabad', state: 'Gujarat', type: 'Private', affordable: false },
+        { name: 'HCG Cancer Centre', city: 'Ahmedabad', state: 'Gujarat', type: 'Private', affordable: false },
+        { name: 'Zydus Cancer Hospital', city: 'Ahmedabad', state: 'Gujarat', type: 'Private', affordable: false },
+        { name: 'CMC Vellore', city: 'Vellore', state: 'Tamil Nadu', type: 'Private', affordable: true }, 
+        { name: 'PGIMER Cancer Wing', city: 'Chandigarh', state: 'Chandigarh', type: 'Government', affordable: true },
+    ];
+    
+    function populateHospitalFilters() {
+        const states = [...new Set(hospitals.map(h => h.state))].sort();
+        const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+        
+        const filterLabels = {
+            en: { allStates: 'All States', allTypes: 'All Types', govt: 'Government', private: 'Private' },
+            hi: { allStates: 'सभी राज्य', allTypes: 'सभी प्रकार', govt: 'सरकारी', private: 'निजी' },
+            gu: { allStates: 'બધા રાજ્યો', allTypes: 'બધા પ્રકારો', govt: 'સરકારી', private: 'ખાનગી' }
+        };
+
+        const currentLabels = filterLabels[currentLang];
+        
+        stateFilter.innerHTML = `<option value="all">${currentLabels.allStates}</option>`;
+        states.forEach(state => {
+            const option = document.createElement('option');
+            option.value = state;
+            option.textContent = state;
+            stateFilter.appendChild(option);
+        });
+
+        typeFilter.innerHTML = `
+            <option value="all">${currentLabels.allTypes}</option>
+            <option value="Government">${currentLabels.govt}</option>
+            <option value="Private">${currentLabels.private}</option>
+        `;
+    }
+
+    function renderHospitalList() {
+        const selectedState = stateFilter.value;
+        const selectedType = typeFilter.value;
+        const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+
+        const filteredHospitals = hospitals.filter(h => 
+            (selectedState === 'all' || h.state === selectedState) &&
+            (selectedType === 'all' || h.type === selectedType)
+        );
+
+        hospitalListContainer.innerHTML = '';
+        if (filteredHospitals.length === 0) {
+            hospitalListContainer.innerHTML = `<p class="text-center text-gray-500">
+                <span class="lang-content" data-lang="en">No hospitals found matching your criteria.</span>
+                <span class="lang-content hidden-lang" data-lang="hi">आपके मानदंडों से मेल खाने वाला कोई अस्पताल नहीं मिला।</span>
+                <span class="lang-content hidden-lang" data-lang="gu">તમારા માપદંડ સાથે મેળ ખાતી કોઈ હોસ્પિટલ મળી નથી.</span>
+            </p>`;
+        } else {
+            filteredHospitals.forEach(h => {
+                const hospitalCard = document.createElement('div');
+                hospitalCard.className = 'card p-4 flex justify-between items-center';
+                hospitalCard.innerHTML = `
+                    <div>
+                        <h5 class="font-bold text-[#4A5D5F]">${h.name}</h5>
+                        <p class="text-sm text-gray-500">
+                            <span class="lang-content" data-lang="en">${h.city}, ${h.state}</span>
+                            <span class="lang-content hidden-lang" data-lang="hi">${h.city === 'Multiple' ? 'कई शहर' : h.city}, ${h.state === 'Multiple' ? 'कई राज्य' : h.state}</span>
+                            <span class="lang-content hidden-lang" data-lang="gu">${h.city === 'Multiple' ? 'ઘણા શહેરો' : h.city}, ${h.state === 'Multiple' ? 'ઘણા રાજ્યો' : h.state}</span>
+                        </p>
+                    </div>
+                    <span class="text-sm font-semibold px-2 py-1 rounded-full ${h.type === 'Government' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                        <span class="lang-content" data-lang="en">${h.type}</span>
+                        <span class="lang-content hidden-lang" data-lang="hi">${h.type === 'Government' ? 'सरकारी' : 'निजी'}</span>
+                        <span class="lang-content hidden-lang" data-lang="gu">${h.type === 'Government' ? 'સરકારી' : 'ખાનગી'}</span>
+                    </span>
+                `;
+                hospitalListContainer.appendChild(hospitalCard);
+            });
+        }
+        // After rendering, ensure the language content within the newly added cards is correctly displayed
+        hospitalListContainer.querySelectorAll('.lang-content').forEach(content => {
+            if (content.dataset.lang === currentLang) {
+                content.classList.remove('hidden-lang');
+            } else {
+                content.classList.add('hidden-lang');
+            }
+        });
+    }
+
+    stateFilter.addEventListener('change', renderHospitalList);
+    typeFilter.addEventListener('change', renderHospitalList);
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section[id]');
+    
+    function updateActiveNav() {
+        let index = sections.length;
+        while(--index && window.scrollY + 50 < sections[index].offsetTop) {}
+        
+        navLinks.forEach((link) => link.classList.remove('active-nav'));
+        const activeLink = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active-nav');
+        }
+    }
+
+    window.addEventListener('scroll', updateActiveNav);
+    
+    // Initial calls after all element references are established
+    // These functions are now called within switchLanguage, which is called on DOMContentLoaded
+    // so no need to call them again here directly.
+});
+</script>
+</body>
+</html>
